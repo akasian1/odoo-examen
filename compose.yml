@@ -1,0 +1,52 @@
+services:
+  web:
+    image: odoo:19.0
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
+    environment:
+      - PASSWORD_FILE=/run/secrets/postgresql_password
+    secrets:
+      - postgresql_password
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgresql_password
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+    secrets:
+      - postgresql_password
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    container_name: pgadmin_odooExamen
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+    secrets:
+      - pgadmin_password
+  
+volumes:
+  odoo-web-data:
+  odoo-db-data:
+  pgadmin_data:
+
+secrets:
+  postgresql_password:
+    file: odoo_pg_pass
+  pgadmin_password:
+    file: pgadmin_pass
